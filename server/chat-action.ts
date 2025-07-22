@@ -2,8 +2,14 @@
 
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
 
 const model = new ChatOpenAI({ model: "gpt-4" });
+
+const promptTemplate = ChatPromptTemplate.fromMessages([
+  ["system", "Translate the following from English into {language}"],
+  ["user", "{text}"],
+]);
 
 const messages = [
   new SystemMessage("Translate the following from English into spanish"),
@@ -34,4 +40,26 @@ export async function streamChat(prompt: string) {
         controller.close();
       },
     });
-  }
+}
+
+export async function streamChatWithPromptTemplate(
+  language: string,
+  text: string
+) {
+
+const messages = await promptTemplate.formatMessages({
+  language: language,
+  text: text,
+});
+
+const stream = await model.stream(messages);
+
+return new ReadableStream({
+  async start(controller) {
+    for await (const chunk of stream) {
+      controller.enqueue(chunk.content);
+    }
+    controller.close();
+  },
+});
+}

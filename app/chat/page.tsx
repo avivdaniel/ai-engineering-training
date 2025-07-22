@@ -1,6 +1,6 @@
 "use client";
 
-import { chatResponse, streamChat } from "@/server/chat-action";
+import { chatResponse, streamChat, streamChatWithPromptTemplate } from "@/server/chat-action";
 import { useState, useRef, useEffect, FormEvent } from "react";
 
 type Message = {
@@ -26,62 +26,118 @@ export default function ChatPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSubmit = async (e: FormEvent) => {
+  // const handleSubmit = async (e: FormEvent) => {
+  //   e.preventDefault()
+
+  //   if (!inputValue.trim() || isStreaming) return
+
+  //   // Add a user message to the chat with unique ID
+  //   const userMessage: Message = {
+  //     id: generateId(),
+  //     role: 'user',
+  //     content: inputValue.trim()
+  //   }
+
+  //   setMessages(prev => [...prev, userMessage])
+
+  //   // Store user input and clear the form
+  //   const userPrompt = inputValue
+
+  //   setInputValue('')
+  //   setIsStreaming(true)
+
+  //   try {
+  //     // Add an empty AI message that will be populated with streaming content
+  //     const aiMessageId = generateId()
+
+  //     setMessages(prev => [...prev, {
+  //       id: aiMessageId,
+  //       role: 'ai',
+  //       content: ''
+  //     }])
+
+  //     // Start streaming
+  //     const stream = await streamChat(userPrompt)
+  //     const reader = stream.getReader()
+
+  //     // Process the stream
+  //     while (true) {
+  //       const { done, value } = await reader.read()
+
+  //       if (done) break
+
+  //       // Update the AI message content with each chunk
+  //       setMessages(prev => {
+  //         const aiMessage = prev.find(msg => msg.id === aiMessageId)
+  //         if (!aiMessage) return prev
+
+  //         return prev.map(msg =>
+  //             msg.id === aiMessageId
+  //                 ? { ...msg, content: msg.content + value }
+  //                 : msg
+  //         )
+  //       })
+  //     }
+  //   } catch (error) {
+  //     console.error('Streaming error:', error)
+
+  //     // Add an error message with unique ID
+  //     setMessages(prev => [...prev, {
+  //       id: generateId(),
+  //       role: 'ai',
+  //       content: 'Sorry, there was an error processing your request.'
+  //     }])
+  //   } finally {
+  //     setIsStreaming(false)
+  //   }
+  // }
+
+  const handleWithTemplate = async (e: FormEvent) => {
     e.preventDefault()
-
+  
     if (!inputValue.trim() || isStreaming) return
-
-    // Add a user message to the chat with unique ID
+  
     const userMessage: Message = {
       id: generateId(),
       role: 'user',
       content: inputValue.trim()
     }
-
+  
     setMessages(prev => [...prev, userMessage])
-
-    // Store user input and clear the form
     const userPrompt = inputValue
-
+    const browserLanguage = window.navigator.language.split('-')[0]
+  
     setInputValue('')
     setIsStreaming(true)
-
+  
     try {
-      // Add an empty AI message that will be populated with streaming content
       const aiMessageId = generateId()
-
       setMessages(prev => [...prev, {
         id: aiMessageId,
         role: 'ai',
         content: ''
       }])
-
-      // Start streaming
-      const stream = await streamChat(userPrompt)
+  
+      const stream = await streamChatWithPromptTemplate(browserLanguage, userPrompt)
       const reader = stream.getReader()
-
-      // Process the stream
+  
       while (true) {
-        const { done, value } = await reader.read()
-
+        const {done, value} = await reader.read()
         if (done) break
-
-        // Update the AI message content with each chunk
+  
         setMessages(prev => {
           const aiMessage = prev.find(msg => msg.id === aiMessageId)
           if (!aiMessage) return prev
-
+  
           return prev.map(msg =>
               msg.id === aiMessageId
-                  ? { ...msg, content: msg.content + value }
+                  ? {...msg, content: msg.content + value}
                   : msg
           )
         })
       }
     } catch (error) {
       console.error('Streaming error:', error)
-
-      // Add an error message with unique ID
       setMessages(prev => [...prev, {
         id: generateId(),
         role: 'ai',
@@ -125,14 +181,14 @@ export default function ChatPage() {
       {/* Input form fixed at the bottom */}
       <div className="border-t border-gray-200 bg-black">
         <div className="max-w-2xl mx-auto p-4">
-          <form onSubmit={handleSubmit} className="flex gap-2">
+          <form onSubmit={handleWithTemplate} className="flex gap-2">
             <input
               autoFocus
               type="text"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               placeholder="Type your message here..."
-              className="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2"
+              className="text-white flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2"
             />
             <button
               type="submit"
