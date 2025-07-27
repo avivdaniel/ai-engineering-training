@@ -62,7 +62,7 @@ async function createVectorStore(docs: Document[]): Promise<MemoryVectorStore> {
 }
 
 // Initializes the vector store singleton
-async function initializeVectorStore(): Promise<MemoryVectorStore> {
+export async function initializeVectorStore(): Promise<MemoryVectorStore> {
   if (vectorStore) {
     return vectorStore;
   }
