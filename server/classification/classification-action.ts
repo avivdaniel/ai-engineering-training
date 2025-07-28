@@ -1,4 +1,4 @@
-'use server'
+"use server";
 
 import { z } from "zod";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
@@ -17,6 +17,16 @@ const classificationSchema = z.object({
     .int()
     .describe("How aggressive the text is on a scale from 1 to 10"),
   language: z.string().describe("The language the text is written in"),
+  category: z
+    .string()
+    .describe(
+      "General category of the text: Business, Technology, Health, Education, Entertainment, or Other"
+    ),
+  intent: z
+    .string()
+    .describe(
+      "The intent behind the text: Inform, Complain, Request, Praise, etc."
+    ),
 });
 
 const taggingPrompt = ChatPromptTemplate.fromTemplate(
@@ -38,10 +48,12 @@ export async function streamClassification(text: string) {
 
   const messages = [
     new SystemMessage(
-      "You are a content classifier. Analyze the text and classify it into one of these categories: " +
-        "Business, Technology, Health, Education, Entertainment, or Other. " +
-        "First, provide the classification category in a single word. " +
-        "Then, on a new line, provide a brief explanation for why you classified it this way."
+      "You are a content classifier. Analyze the text and determine its main topic. " +
+        "Create a suitable category name (one to three words) that best represents the content. " +
+        "Be concise and specific — for example: 'Food Complaint', 'Religious Services', 'Online Shopping', etc. " +
+        "Avoid generic terms like 'Other' unless absolutely necessary. " +
+        "First, provide the category name. " +
+        "Then, on a new line, briefly explain why you chose that category."
     ),
     new HumanMessage(prompt.toString()),
   ];
