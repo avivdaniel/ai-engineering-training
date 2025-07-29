@@ -1,3 +1,4 @@
+'use server'
 import { Annotation, END, START, StateGraph } from "@langchain/langgraph";
 
 // Define the state using LangGraph's Annotation system
